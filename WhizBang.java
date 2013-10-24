@@ -7,7 +7,7 @@ import game.*;
  * Whizbang is an AI breakthrough player for CSE 486.
  * 
  * @author Cooper Riley, Josh Ruebusch, Lauren Murray
- *
+ * 
  */
 public class WhizBang extends GamePlayer {
 
@@ -17,13 +17,76 @@ public class WhizBang extends GamePlayer {
 
 	@Override
 	public GameMove getMove(GameState state, String lastMv) {
-		BreakthroughState board = (BreakthroughState)state;
-		
-		// TODO Auto-generated method stub
+		BreakthroughState board = (BreakthroughState) state;
+
+		// TODO Scoring and move decision
+
 		return null;
 	}
 
-	public static void main(String[] args){
+	/**
+	 * Determines a score based on the number of opposing pieces in front and
+	 * diagonal to the player's pieces. Will be run once for each player.
+	 * 
+	 * @param board
+	 *            the board which is being examined
+	 * @param player
+	 *            which player are we evaluating for
+	 * @return the score for player
+	 */
+	public int forwardTriangleEval(BreakthroughState board, char player) {
+		int score = 0;
+
+		// TODO Adjust score to allow for weighted scoring
+		for (int row = 0; row < BreakthroughState.N; row++) {
+			for (int col = 0; col < BreakthroughState.N; col++) {
+				if (board.board[row][col] == player) {
+					score += forwardTriAtPiece(board, row, col);
+				}
+			}
+		}
+		return score;
+	}
+
+	/**
+	 * Used by forwardTriangleEval function, counts the opposing pieces in front
+	 * of a specific player piece.
+	 * 
+	 * @param board
+	 *            to be examined
+	 * @param row
+	 *            of piece we are looking at
+	 * @param col
+	 *            of piece we are looking at
+	 * @return number of opposing pieces in front of that piece
+	 */
+	public int forwardTriAtPiece(BreakthroughState board, int row, int col) {
+		int count = 0;
+
+		if (board.who == GameState.Who.HOME) {
+			for (int i = row + 1; i < BreakthroughState.N; i++) {
+				for (int j = row - i; j <= i - row; j++) {
+					if (col + j >= 0 && col + j < BreakthroughState.N) {
+						if (board.board[i][col + j] == BreakthroughState.awaySym) {
+							count++;
+						}
+					}
+				}
+			}
+		} else {
+			for (int i = row - 1; i >= 0; i--) {
+				for (int j = i - row; j <= row - i; j++) {
+					if (col + j >= 0 && col + j < BreakthroughState.N) {
+						if (board.board[i][col + j] == BreakthroughState.homeSym)
+							count++;
+					}
+				}
+			}
+		}
+		return count;
+	}
+
+	public static void main(String[] args) {
 		GamePlayer player = new WhizBang("The WhizBanger", false);
 		player.compete(args);
 	}
