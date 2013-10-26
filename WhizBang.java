@@ -25,6 +25,36 @@ public class WhizBang extends GamePlayer {
 	}
 
 	/**
+	 * The method that searches through the possible moves.
+	 * 
+	 * @param board
+	 *            the board being analyzed
+	 * @param currentDepth
+	 *            the current depth of the search
+	 * @param alpha
+	 *            best Max value
+	 * @param beta
+	 *            best Min value
+	 */
+	public void alphaBeta(BreakthroughState board, int currentDepth,
+			double alpha, double beta) {
+		// TODO the method for doing the a-b search
+	}
+
+	/**
+	 * Evaluation function used by a alpha-beta search method. it calls all
+	 * scoring functions to calculate the score.
+	 * 
+	 * @param board
+	 *            the board to evaluate
+	 * @return the score of the board (+ home winning, - away winning)
+	 */
+	public int evaluate(BreakthroughState board) {
+		// TODO We can figure out this once we write all our scoring methods.
+		return 0;
+	}
+
+	/**
 	 * Determines a score based on the number of opposing pieces in front and
 	 * diagonal to the player's pieces. Will be run once for each player.
 	 * 
