@@ -115,6 +115,36 @@ public class WhizBang extends GamePlayer {
 		}
 		return count;
 	}
+	
+	/**
+	 * Determines the score based on pieces that are blocked. Runs only once for the entire board
+	 * @param board
+	 * 			state is examined for scoring
+	 * @return score
+	 * 			positive if in home favor and negative if away favor
+	 */
+	public int detectBlock(BreakthroughState board){
+		int score = 0;
+		for(int i = 0; i < BreakthroughState.N; i++){
+			for(int j = 0; j < BreakthroughState.N; j++){
+				if(board.board[i][j] == BreakthroughState.homeSym && 
+						j+2 <= BreakthroughState.N-1){
+						if(board.board[i][j+1] == BreakthroughState.awaySym &&
+								board.board[i][j+2] == BreakthroughState.awaySym){
+							score--;
+						}
+				}
+				else if(board.board[i][j] == BreakthroughState.awaySym &&
+						j-2 >= 0){
+					if(board.board[i][j-1] == BreakthroughState.homeSym &&
+							board.board[i][j-2] == BreakthroughState.homeSym){
+						score++;
+					}
+				}
+			}
+		}
+		return score;
+	}
 
 	public static void main(String[] args) {
 		GamePlayer player = new WhizBang("The WhizBanger", false);
