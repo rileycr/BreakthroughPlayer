@@ -96,48 +96,49 @@ public class WhizBang extends GamePlayer {
 		if (board.who == GameState.Who.HOME) {
 			for (int i = row + 1; i < BreakthroughState.N; i++) {
 				for (int j = row - i; j <= i - row; j++) {
-					if (col + j >= 0 && col + j < BreakthroughState.N) {
-						if (board.board[i][col + j] == BreakthroughState.awaySym) {
-							count++;
-						}
+					if (col + j >= 0
+							&& col + j < BreakthroughState.N
+							&& board.board[i][col + j] == BreakthroughState.awaySym) {
+						count++;
 					}
 				}
 			}
 		} else {
 			for (int i = row - 1; i >= 0; i--) {
 				for (int j = i - row; j <= row - i; j++) {
-					if (col + j >= 0 && col + j < BreakthroughState.N) {
-						if (board.board[i][col + j] == BreakthroughState.homeSym)
-							count++;
+					if (col + j >= 0
+							&& col + j < BreakthroughState.N
+							&& board.board[i][col + j] == BreakthroughState.awaySym) {
+						count++;
 					}
 				}
 			}
 		}
 		return count;
 	}
-	
+
 	/**
-	 * Determines the score based on pieces that are blocked. Runs only once for the entire board
+	 * Determines the score based on pieces that are blocked. Runs only once for
+	 * the entire board
+	 * 
 	 * @param board
-	 * 			state is examined for scoring
-	 * @return score
-	 * 			positive if in home favor and negative if away favor
+	 *            state is examined for scoring
+	 * @return score positive if in home favor and negative if away favor
 	 */
-	public int detectBlock(BreakthroughState board){
+	public int detectBlock(BreakthroughState board) {
 		int score = 0;
-		for(int i = 0; i < BreakthroughState.N; i++){
-			for(int j = 0; j < BreakthroughState.N; j++){
-				if(board.board[i][j] == BreakthroughState.homeSym && 
-						j+2 <= BreakthroughState.N-1){
-						if(board.board[i][j+1] == BreakthroughState.awaySym &&
-								board.board[i][j+2] == BreakthroughState.awaySym){
-							score--;
-						}
-				}
-				else if(board.board[i][j] == BreakthroughState.awaySym &&
-						j-2 >= 0){
-					if(board.board[i][j-1] == BreakthroughState.homeSym &&
-							board.board[i][j-2] == BreakthroughState.homeSym){
+		for (int i = 0; i < BreakthroughState.N; i++) {
+			for (int j = 0; j < BreakthroughState.N; j++) {
+				if (board.board[i][j] == BreakthroughState.homeSym
+						&& i + 2 <= BreakthroughState.N - 1) {
+					if (board.board[i + 1][j] == BreakthroughState.awaySym
+							&& board.board[i + 2][j] == BreakthroughState.awaySym) {
+						score--;
+					}
+				} else if (board.board[i][j] == BreakthroughState.awaySym
+						&& i - 2 >= 0) {
+					if (board.board[i - 1][j] == BreakthroughState.homeSym
+							&& board.board[i - 2][j] == BreakthroughState.homeSym) {
 						score++;
 					}
 				}
