@@ -28,6 +28,9 @@ public class WhizBang extends GamePlayer {
 
 	}
 
+	/**
+	 * Initailizes the move stack to the size of the max depth
+	 */
 	public void initalizeStack() {
 		moveStack = new ScoredBreakthroughMove[MAX_DEPTH];
 		for (int i = 0; i < MAX_DEPTH; i++) {
@@ -245,6 +248,13 @@ public class WhizBang extends GamePlayer {
 		return score;
 	}
 
+	/**
+	 * Determines if the current board state is the end of a game.
+	 * @param board
+	 * @param mvStack the moves made
+	 * @param depth the last move, could be the ending move
+	 * @return
+	 */
 	public boolean terminalValue(BreakthroughState board, ScoredBreakthroughMove [] mvStack, int depth) {
 		GameState.Status status = board.getStatus();
 		boolean isTerminal = true;
