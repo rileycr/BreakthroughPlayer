@@ -13,7 +13,7 @@ public class WhizBang extends GamePlayer {
 
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static final int MAX_DEPTH = 5; // TODO
+	public static final int MAX_DEPTH = 2; // TODO
 
 	public WhizBang(String nickname, boolean isDeterministic) {
 		super(nickname, new BreakthroughState(), isDeterministic);
@@ -51,13 +51,16 @@ public class WhizBang extends GamePlayer {
 			double alpha, double beta) {
 
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
-		boolean isTerminal = terminalValue(board, moveStack[currentDepth]);
+		boolean isTerminal = terminalValue(board, moveStack, currentDepth);
 
 		if (isTerminal) {
 			;
 		} else if (currentDepth == MAX_DEPTH - 1) {
 			moveStack[currentDepth].score = evaluate(board);
 		} else {
+			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY
+					: Double.POSITIVE_INFINITY);
+			
 			char whoseTurn;
 			int dRow; // The change in row for a turn
 			if (toMaximize) {
@@ -68,13 +71,11 @@ public class WhizBang extends GamePlayer {
 				dRow = -1;
 			}
 
-			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY
-					: Double.POSITIVE_INFINITY);
 			ScoredBreakthroughMove tempMove = new ScoredBreakthroughMove();
 			ScoredBreakthroughMove bestMove = moveStack[currentDepth];
 			ScoredBreakthroughMove nextMove = moveStack[currentDepth + 1];
 			bestMove.score = bestScore;
-			GameState.Who currentTurn = board.getWho();
+			// GameState.Who currentTurn = board.getWho();
 
 			for (int i = 0; i < BreakthroughState.N; i++) {
 				for (int j = 0; j < BreakthroughState.N; j++) {
@@ -85,15 +86,11 @@ public class WhizBang extends GamePlayer {
 
 						for (int k = -1; k < 2; k++) {
 							tempMove.endingCol = j + k;
-							if (ScoredBreakthroughMove
-									.indexOK(tempMove.endingCol)
-									&& board.board[tempMove.endingRow][tempMove.endingCol] != whoseTurn) {
 
-								BreakthroughState tempBoard = (BreakthroughState) board
-										.clone();
+							if (board.moveOK(tempMove)) {
+								BreakthroughState tempBoard = (BreakthroughState) board.clone();
 								tempBoard.makeMove(tempMove);
-								alphaBeta(tempBoard, currentDepth + 1, alpha,
-										beta);
+								alphaBeta(tempBoard, currentDepth + 1, alpha, beta);
 
 								/*
 								 * char currentlyThere =
@@ -108,21 +105,17 @@ public class WhizBang extends GamePlayer {
 								 * endingRow] = currentlyThere;
 								 * board.board[tempMove
 								 * .startCol][tempMove.startRow] = whoseTurn;
+								 * 
+								 * board.status = GameState.Status.GAME_ON;
+								 * board.who = currentTurn;
 								 */
-
-								board.status = GameState.Status.GAME_ON;
-								board.who = currentTurn;
-
+								
 								// Updates the best score
-								if (toMaximize
-										&& nextMove.score > bestMove.score) {
-									bestMove = (ScoredBreakthroughMove) tempMove
-											.clone();
+								if (toMaximize && nextMove.score > bestMove.score) {
+									bestMove = (ScoredBreakthroughMove) tempMove.clone();
 									bestMove.score = nextMove.score;
-								} else if (!toMaximize
-										&& nextMove.score < bestMove.score) {
-									bestMove = (ScoredBreakthroughMove) tempMove
-											.clone();
+								} else if (!toMaximize && nextMove.score < bestMove.score) {
+									bestMove = (ScoredBreakthroughMove) tempMove.clone();
 									bestMove.score = nextMove.score;
 								}
 
@@ -252,17 +245,16 @@ public class WhizBang extends GamePlayer {
 		return score;
 	}
 
-	public boolean terminalValue(BreakthroughState board,
-			ScoredBreakthroughMove move) {
+	public boolean terminalValue(BreakthroughState board, ScoredBreakthroughMove [] mvStack, int depth) {
 		GameState.Status status = board.getStatus();
 		boolean isTerminal = true;
 
 		if (status == GameState.Status.HOME_WIN) {
-			move.score = MAX_SCORE;
+			mvStack[depth].score = MAX_SCORE;
 		} else if (status == GameState.Status.AWAY_WIN) {
-			move.score = -MAX_SCORE;
+			mvStack[depth].score = -MAX_SCORE;
 		} else if (status == GameState.Status.DRAW) {
-			move.score = 0;
+			mvStack[depth].score = 0;
 		} else {
 			isTerminal = false;
 		}
