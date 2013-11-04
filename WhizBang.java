@@ -13,7 +13,7 @@ public class WhizBang extends GamePlayer {
 
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static final int MAX_DEPTH = 2; // TODO
+	public static final int MAX_DEPTH = 7; // TODO
 
 	public WhizBang(String nickname, boolean isDeterministic) {
 		super(nickname, new BreakthroughState(), isDeterministic);
@@ -61,9 +61,8 @@ public class WhizBang extends GamePlayer {
 		} else if (currentDepth == MAX_DEPTH - 1) {
 			moveStack[currentDepth].score = evaluate(board);
 		} else {
-			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY
-					: Double.POSITIVE_INFINITY);
-			
+			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
+
 			char whoseTurn;
 			int dRow; // The change in row for a turn
 			if (toMaximize) {
@@ -78,7 +77,6 @@ public class WhizBang extends GamePlayer {
 			ScoredBreakthroughMove bestMove = moveStack[currentDepth];
 			ScoredBreakthroughMove nextMove = moveStack[currentDepth + 1];
 			bestMove.score = bestScore;
-			// GameState.Who currentTurn = board.getWho();
 
 			for (int i = 0; i < BreakthroughState.N; i++) {
 				for (int j = 0; j < BreakthroughState.N; j++) {
@@ -91,34 +89,20 @@ public class WhizBang extends GamePlayer {
 							tempMove.endingCol = j + k;
 
 							if (board.moveOK(tempMove)) {
-								BreakthroughState tempBoard = (BreakthroughState) board.clone();
+								BreakthroughState tempBoard = (BreakthroughState) board
+										.clone();
 								tempBoard.makeMove(tempMove);
-								alphaBeta(tempBoard, currentDepth + 1, alpha, beta);
-
-								/*
-								 * char currentlyThere =
-								 * board.board[tempMove.endingCol
-								 * ][tempMove.endingRow];
-								 * board.makeMove(tempMove);
-								 * 
-								 * alphaBeta(board, currentDepth + 1, alpha,
-								 * beta);
-								 * 
-								 * board.board[tempMove.endingCol][tempMove.
-								 * endingRow] = currentlyThere;
-								 * board.board[tempMove
-								 * .startCol][tempMove.startRow] = whoseTurn;
-								 * 
-								 * board.status = GameState.Status.GAME_ON;
-								 * board.who = currentTurn;
-								 */
+								alphaBeta(tempBoard, currentDepth + 1, alpha,
+										beta);
 								
 								// Updates the best score
-								if (toMaximize && nextMove.score > bestMove.score) {
-									bestMove = (ScoredBreakthroughMove) tempMove.clone();
+								if (toMaximize
+										&& nextMove.score > bestMove.score) {
+									bestMove.set(tempMove);
 									bestMove.score = nextMove.score;
-								} else if (!toMaximize && nextMove.score < bestMove.score) {
-									bestMove = (ScoredBreakthroughMove) tempMove.clone();
+								} else if (!toMaximize
+										&& nextMove.score < bestMove.score) {
+									bestMove.set(tempMove);
 									bestMove.score = nextMove.score;
 								}
 
@@ -250,12 +234,16 @@ public class WhizBang extends GamePlayer {
 
 	/**
 	 * Determines if the current board state is the end of a game.
+	 * 
 	 * @param board
-	 * @param mvStack the moves made
-	 * @param depth the last move, could be the ending move
+	 * @param mvStack
+	 *            the moves made
+	 * @param depth
+	 *            the last move, could be the ending move
 	 * @return
 	 */
-	public boolean terminalValue(BreakthroughState board, ScoredBreakthroughMove [] mvStack, int depth) {
+	public boolean terminalValue(BreakthroughState board,
+			ScoredBreakthroughMove[] mvStack, int depth) {
 		GameState.Status status = board.getStatus();
 		boolean isTerminal = true;
 
@@ -274,7 +262,15 @@ public class WhizBang extends GamePlayer {
 
 	public static void main(String[] args) {
 		GamePlayer player = new WhizBang("The WhizBanger", false);
+
 		player.compete(args);
+
+		// Used for testing
+	//	BreakthroughState st = new BreakthroughState();
+	//	player.init();
+	//	GameMove mv = player.getMove(st, "");
+	//	System.out.println(mv);
+
 	}
 
 	/**
@@ -297,10 +293,11 @@ public class WhizBang extends GamePlayer {
 			this.score = 0;
 		}
 
-		public Object clone() {
-			return new ScoredBreakthroughMove(startRow, startCol, endingRow,
-					endingCol, score);
-
+		public void set(ScoredBreakthroughMove mv) {
+			this.startRow = mv.startRow;
+			this.endingRow = mv.endingRow;
+			this.startCol = mv.startCol;
+			this.endingCol = mv.endingCol;
 		}
 	}
 }
