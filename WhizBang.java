@@ -15,7 +15,7 @@ public class WhizBang extends GamePlayer {
 
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static final int MAX_DEPTH = 6; // TODO
+	public static final int MAX_DEPTH = 8; // TODO
 	// Board values for the home team
 	private static final int[][] homeValues = { { 5, 15, 15, 5, 15, 15, 5 },
 			{ 2, 3, 3, 3, 3, 3, 2 }, { 4, 5, 5, 5, 5, 5, 4 },
@@ -154,9 +154,18 @@ public class WhizBang extends GamePlayer {
 	 * @return the score of the board (+ home winning, - away winning)
 	 */
 	public double evaluate(BreakthroughState board) {
-		// TODO a preliminary implementation just to do some testing.
-		return positionalEval(board) + forwardTriangleEval(board)
-				+ detectBlock(board);
+		double score = 0;
+
+		for (int row = 0; row < BreakthroughState.N; row++) {
+			for (int col = 0; col < BreakthroughState.N; col++) {
+
+				score += forwardTriangleEval(board, row, col)
+						+ positionalEval(board, row, col)
+						+ detectBlock(board, row, col)
+						+ piecesInARow(board, row, col);
+			}
+		}
+		return score;
 	}
 
 	/**
@@ -169,14 +178,10 @@ public class WhizBang extends GamePlayer {
 	 *            the board to be evaluated
 	 * @return the combined score of home and away
 	 */
-	public double forwardTriangleEval(BreakthroughState board) {
+	public double forwardTriangleEval(BreakthroughState board, int row, int col) {
 		double score = 0;
-		for (int row = 0; row < BreakthroughState.N; row++) {
-			for (int col = 0; col < BreakthroughState.N; col++) {
-				if (board.board[row][col] != BreakthroughState.emptySym) {
-					score += forwardTriAtPiece(board, row, col);
-				}
-			}
+		if (board.board[row][col] != BreakthroughState.emptySym) {
+			score += forwardTriAtPiece(board, row, col);
 		}
 		return score;
 	}
@@ -196,7 +201,7 @@ public class WhizBang extends GamePlayer {
 	public double forwardTriAtPiece(BreakthroughState board, int row, int col) {
 		double count = 0;
 
-		if (board.board[row][col] == BreakthroughState.homeSym) {
+		if (board.board[row][col] == BreakthroughState.homeSym && row >= (BreakthroughState.N / 2)) {
 			for (int i = row + 1; i < BreakthroughState.N; i++) {
 				for (int j = row - i; j < i - row; j++) {
 					if (col + j >= 0
@@ -206,7 +211,7 @@ public class WhizBang extends GamePlayer {
 					}
 				}
 			}
-		} else {
+		} else if (row <= (BreakthroughState.N / 2)) {
 			for (int i = row - 1; i >= 0; i--) {
 				for (int j = i - row; j < row - i; j++) {
 					if (col + j >= 0
@@ -229,19 +234,17 @@ public class WhizBang extends GamePlayer {
 	 *            the board to evaluate
 	 * @return - value of the board
 	 */
-	public double positionalEval(BreakthroughState board) {
+	public double positionalEval(BreakthroughState board, int row, int col) {
 		double boardScore = 0;
 		int pieceCount = 0;
-		for (int row = 0; row < BreakthroughState.N; row++) {
-			for (int col = 0; col < BreakthroughState.N; col++) {
-				if (board.board[row][col] == BreakthroughState.homeSym) {
-					pieceCount += 1;
-					boardScore += homeValues[row][col];
-				} else if (board.board[row][col] == BreakthroughState.awaySym) {
-					pieceCount -= 1;
-					boardScore -= awayValues[row][col];
-				}
-			}
+
+		if (board.board[row][col] == BreakthroughState.homeSym) {
+			pieceCount += 1;
+			boardScore += homeValues[row][col];
+		} else if (board.board[row][col] == BreakthroughState.awaySym) {
+			pieceCount -= 1;
+			boardScore -= awayValues[row][col];
+
 			// If we have an uneven number of pieces on our board, update score
 			boardScore += pieceCount * 1.5;
 		}
@@ -256,25 +259,44 @@ public class WhizBang extends GamePlayer {
 	 *            state is examined for scoring
 	 * @return score positive if in home favor and negative if away favor
 	 */
-	public double detectBlock(BreakthroughState board) {
+	public double detectBlock(BreakthroughState board, int row, int col) {
 		double score = 0;
-		for (int i = 0; i < BreakthroughState.N; i++) {
-			for (int j = 0; j < BreakthroughState.N; j++) {
-				if (board.board[i][j] == BreakthroughState.homeSym
-						&& i + 2 <= BreakthroughState.N - 1) {
-					if (board.board[i + 1][j] == BreakthroughState.awaySym
-							&& board.board[i + 2][j] == BreakthroughState.awaySym) {
-						score--;
-					}
-				} else if (board.board[i][j] == BreakthroughState.awaySym
-						&& i - 2 >= 0) {
-					if (board.board[i - 1][j] == BreakthroughState.homeSym
-							&& board.board[i - 2][j] == BreakthroughState.homeSym) {
-						score++;
-					}
-				}
+
+		if (board.board[row][col] == BreakthroughState.homeSym
+				&& row + 2 <= BreakthroughState.N - 1) {
+			if (board.board[row + 1][col] == BreakthroughState.awaySym
+					&& board.board[row + 2][col] == BreakthroughState.awaySym) {
+				score--;
+			}
+		} else if (board.board[row][col] == BreakthroughState.awaySym
+				&& row - 2 >= 0) {
+			if (board.board[row - 1][col] == BreakthroughState.homeSym
+					&& board.board[row - 2][col] == BreakthroughState.homeSym) {
+				score++;
 			}
 		}
+
+		return score;
+	}
+
+	/**
+	 * Counts the number of similar pieces in a row
+	 * 
+	 * @param board
+	 *            to be evaluated
+	 * @param row
+	 *            of the piece we are checking
+	 * @param col
+	 *            of the piece we are checking
+	 * @return score
+	 */
+	public double piecesInARow(BreakthroughState board, int row, int col) {
+		double score = 0;
+
+		if (board.board[row][col] == board.board[row][col + 1]) {
+			score++;
+		}
+
 		return score;
 	}
 
