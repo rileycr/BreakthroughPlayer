@@ -66,10 +66,10 @@ public class WhizBang extends GamePlayer {
 			double alpha, double beta) {
 
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
-		boolean isTerminal = terminalValue(board, moveStack, currentDepth);
+		boolean isTerminal = terminalValue(board, moveStack[currentDepth]);
 
 		if (isTerminal) {
-			;
+			return;
 		} else if (currentDepth == MAX_DEPTH - 1) {
 			moveStack[currentDepth].score = evaluate(board);
 		} else {
@@ -310,17 +310,16 @@ public class WhizBang extends GamePlayer {
 	 *            the last move, could be the ending move
 	 * @return
 	 */
-	public boolean terminalValue(BreakthroughState board,
-			ScoredBreakthroughMove[] mvStack, int depth) {
+	public boolean terminalValue(BreakthroughState board, ScoredBreakthroughMove move) {
 		GameState.Status status = board.getStatus();
 		boolean isTerminal = true;
 
 		if (status == GameState.Status.HOME_WIN) {
-			mvStack[depth].score = MAX_SCORE;
+			move.score = MAX_SCORE;
 		} else if (status == GameState.Status.AWAY_WIN) {
-			mvStack[depth].score = -MAX_SCORE;
+			move.score = -MAX_SCORE;
 		} else if (status == GameState.Status.DRAW) {
-			mvStack[depth].score = 0;
+			move.score = 0;
 		} else {
 			isTerminal = false;
 		}
