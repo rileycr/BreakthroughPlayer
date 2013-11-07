@@ -15,8 +15,10 @@ public class WhizBang extends GamePlayer {
 
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static int MAX_DEPTH = 7; // TODO
-
+	public static int MAX_DEPTH = 8; // TODO
+	
+	public Runnable threads;
+	
 	// Board values for the home team
 	private static final int[][] homeValues = { { 5, 15, 15, 5, 15, 15, 5 },
 			{ 2, 3, 3, 3, 3, 3, 2 }, { 4, 5, 5, 5, 5, 5, 4 },
@@ -34,6 +36,14 @@ public class WhizBang extends GamePlayer {
 
 	@Override
 	public GameMove getMove(GameState state, String lastMv) {
+		
+		if(state.getNumMoves() < 10){
+			MAX_DEPTH = 6;
+		} else if(state.getNumMoves() < 20){
+			MAX_DEPTH = 7;
+		} else {
+			MAX_DEPTH = 8;
+		}
 		initializeStack();
 		alphaBeta((BreakthroughState) state, 0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 		return moveStack[0];
@@ -111,33 +121,55 @@ public class WhizBang extends GamePlayer {
 			}
 
 			Collections.shuffle(possibleMoves);
+			
+			
+				doAB(board, possibleMoves, currentDepth, toMaximize, isTerminal, bestMove, nextMove, moveStack, alpha, beta);
+			
+		}
+	}
 
-			for (ScoredBreakthroughMove move : possibleMoves) {
+	/**
+	 * Does the Alpha Beta Search
+	 * @param board
+	 * @param possibleMoves
+	 * @param currentDepth
+	 * @param toMaximize
+	 * @param isTerminal
+	 * @param bestMove
+	 * @param nextMove
+	 * @param moveStack
+	 * @param alpha
+	 * @param beta
+	 */
+	public void doAB(BreakthroughState board,
+			ArrayList<ScoredBreakthroughMove> possibleMoves, int currentDepth,
+			boolean toMaximize, boolean isTerminal, ScoredBreakthroughMove bestMove, ScoredBreakthroughMove nextMove,
+			ScoredBreakthroughMove[] moveStack, double alpha, double beta) {
+		for (ScoredBreakthroughMove move : possibleMoves) {
 
-				BreakthroughState tempBoard = (BreakthroughState) board.clone();
-				tempBoard.makeMove(move);
-				alphaBeta(tempBoard, currentDepth + 1, alpha, beta);
+			BreakthroughState tempBoard = (BreakthroughState) board.clone();
+			tempBoard.makeMove(move);
+			alphaBeta(tempBoard, currentDepth + 1, alpha, beta);
 
-				// Updates the best score
-				if (toMaximize && nextMove.score > bestMove.score) {
-					bestMove.set(move);
-					bestMove.score = nextMove.score;
-				} else if (!toMaximize && nextMove.score < bestMove.score) {
-					bestMove.set(move);
-					bestMove.score = nextMove.score;
+			// Updates the best score
+			if (toMaximize && nextMove.score > bestMove.score) {
+				bestMove.set(move);
+				bestMove.score = nextMove.score;
+			} else if (!toMaximize && nextMove.score < bestMove.score) {
+				bestMove.set(move);
+				bestMove.score = nextMove.score;
+			}
+
+			// Performing pruning
+			if (toMaximize) {
+				alpha = Math.max(bestMove.score, alpha);
+				if (bestMove.score >= beta || bestMove.score == MAX_SCORE) {
+					return;
 				}
-
-				// Performing pruning
-				if (toMaximize) {
-					alpha = Math.max(bestMove.score, alpha);
-					if (bestMove.score >= beta || bestMove.score == MAX_SCORE) {
-						return;
-					}
-				} else {
-					beta = Math.min(bestMove.score, beta);
-					if (bestMove.score <= alpha || bestMove.score == -MAX_SCORE) {
-						return;
-					}
+			} else {
+				beta = Math.min(bestMove.score, beta);
+				if (bestMove.score <= alpha || bestMove.score == -MAX_SCORE) {
+					return;
 				}
 			}
 		}
@@ -231,18 +263,13 @@ public class WhizBang extends GamePlayer {
 	 */
 	public double positionalEval(BreakthroughState board, int row, int col) {
 		double boardScore = 0;
-		int pieceCount = 0;
 
 		if (board.board[row][col] == BreakthroughState.homeSym) {
-			pieceCount += 1;
 			boardScore += homeValues[row][col];
 		} else if (board.board[row][col] == BreakthroughState.awaySym) {
-			pieceCount -= 1;
 			boardScore -= awayValues[row][col];
-
-			// If we have an uneven number of pieces on our board, update score
-			boardScore += pieceCount * 1.5;
 		}
+		
 		return boardScore;
 	}
 
@@ -329,17 +356,18 @@ public class WhizBang extends GamePlayer {
 		player.compete(args);
 
 		// Used for testing
+		
 		// for (int i = 2; i < 11; i++) {
 		// MAX_DEPTH = i;
 		// long startTime = System.nanoTime();
 		//
-		// BreakthroughState st = new BreakthroughState();
-		// player.init();
-		// GameMove mv = player.getMove(st, "");
+		/* BreakthroughState st = new BreakthroughState();
+		 player.init();
+		 GameMove mv = player.getMove(st, "");
 		// System.out.println(mv+" Depth "+i+" took: "+((System.nanoTime()-startTime))/1000000000.0);
-
+		 System.out.println(mv);
+		 */
 	}
-
 }
 
 /**
