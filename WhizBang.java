@@ -15,7 +15,8 @@ public class WhizBang extends GamePlayer {
 
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static final int MAX_DEPTH = 8; // TODO
+	public static int MAX_DEPTH = 7; // TODO
+
 	// Board values for the home team
 	private static final int[][] homeValues = { { 5, 15, 15, 5, 15, 15, 5 },
 			{ 2, 3, 3, 3, 3, 3, 2 }, { 4, 5, 5, 5, 5, 5, 4 },
@@ -33,17 +34,15 @@ public class WhizBang extends GamePlayer {
 
 	@Override
 	public GameMove getMove(GameState state, String lastMv) {
-		initalizeStack();
-		alphaBeta((BreakthroughState) state, 0, Double.NEGATIVE_INFINITY,
-				Double.POSITIVE_INFINITY);
+		initializeStack();
+		alphaBeta((BreakthroughState) state, 0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 		return moveStack[0];
-
 	}
 
 	/**
-	 * Initailizes the move stack to the size of the max depth
+	 * Initializes the move stack to the size of the max depth
 	 */
-	public void initalizeStack() {
+	public void initializeStack() {
 		moveStack = new ScoredBreakthroughMove[MAX_DEPTH];
 		for (int i = 0; i < MAX_DEPTH; i++) {
 			moveStack[i] = new ScoredBreakthroughMove();
@@ -73,8 +72,7 @@ public class WhizBang extends GamePlayer {
 		} else if (currentDepth == MAX_DEPTH - 1) {
 			moveStack[currentDepth].score = evaluate(board);
 		} else {
-			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY
-					: Double.POSITIVE_INFINITY);
+			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
 
 			char whoseTurn;
 			int dRow; // The change in row for a turn
@@ -201,12 +199,11 @@ public class WhizBang extends GamePlayer {
 	public double forwardTriAtPiece(BreakthroughState board, int row, int col) {
 		double count = 0;
 
-		if (board.board[row][col] == BreakthroughState.homeSym && row >= (BreakthroughState.N / 2)) {
+		if (board.board[row][col] == BreakthroughState.homeSym
+				&& row >= (BreakthroughState.N / 2)) {
 			for (int i = row + 1; i < BreakthroughState.N; i++) {
 				for (int j = row - i; j < i - row; j++) {
-					if (col + j >= 0
-							&& col + j < BreakthroughState.N
-							&& board.board[i][col + j] == BreakthroughState.awaySym) {
+					if (col + j >= 0 && col + j < BreakthroughState.N && board.board[i][col + j] == BreakthroughState.awaySym) {
 						count--;
 					}
 				}
@@ -214,9 +211,7 @@ public class WhizBang extends GamePlayer {
 		} else if (row <= (BreakthroughState.N / 2)) {
 			for (int i = row - 1; i >= 0; i--) {
 				for (int j = i - row; j < row - i; j++) {
-					if (col + j >= 0
-							&& col + j < BreakthroughState.N
-							&& board.board[i][col + j] == BreakthroughState.homeSym) {
+					if (col + j >= 0 && col + j < BreakthroughState.N && board.board[i][col + j] == BreakthroughState.homeSym) {
 						count++;
 					}
 				}
@@ -310,7 +305,8 @@ public class WhizBang extends GamePlayer {
 	 *            the last move, could be the ending move
 	 * @return
 	 */
-	public boolean terminalValue(BreakthroughState board, ScoredBreakthroughMove move) {
+	public boolean terminalValue(BreakthroughState board,
+			ScoredBreakthroughMove move) {
 		GameState.Status status = board.getStatus();
 		boolean isTerminal = true;
 
@@ -330,47 +326,51 @@ public class WhizBang extends GamePlayer {
 	public static void main(String[] args) {
 		GamePlayer player = new WhizBang("The WhizBanger", false);
 
-		 player.compete(args);
+		player.compete(args);
 
 		// Used for testing
-		//BreakthroughState st = new BreakthroughState();
-		//player.init();
-		//GameMove mv = player.getMove(st, "");
-		//System.out.println(mv);
+		// for (int i = 2; i < 11; i++) {
+		// MAX_DEPTH = i;
+		// long startTime = System.nanoTime();
+		//
+		// BreakthroughState st = new BreakthroughState();
+		// player.init();
+		// GameMove mv = player.getMove(st, "");
+		// System.out.println(mv+" Depth "+i+" took: "+((System.nanoTime()-startTime))/1000000000.0);
 
 	}
 
-	/**
-	 * Extends BreakthroughMove to allow for scoring of moves
-	 * 
-	 * @author Cooper
-	 * 
-	 */
-	class ScoredBreakthroughMove extends BreakthroughMove {
-		public double score;
+}
 
-		public ScoredBreakthroughMove(int r1, int c1, int r2, int c2,
-				double score) {
-			super(r1, c1, r2, c2);
-			this.score = score;
-		}
+/**
+ * Extends BreakthroughMove to allow for scoring of moves
+ * 
+ * @author Cooper
+ * 
+ */
+class ScoredBreakthroughMove extends BreakthroughMove {
+	public double score;
 
-		public ScoredBreakthroughMove() {
-			super();
-			this.score = 0;
-		}
+	public ScoredBreakthroughMove(int r1, int c1, int r2, int c2, double score) {
+		super(r1, c1, r2, c2);
+		this.score = score;
+	}
 
-		public Object clone() {
-			return new ScoredBreakthroughMove(startRow, startCol, endingRow,
-					endingCol, score);
+	public ScoredBreakthroughMove() {
+		super();
+		this.score = 0;
+	}
 
-		}
+	public Object clone() {
+		return new ScoredBreakthroughMove(startRow, startCol, endingRow,
+				endingCol, score);
 
-		public void set(ScoredBreakthroughMove mv) {
-			this.startRow = mv.startRow;
-			this.endingRow = mv.endingRow;
-			this.startCol = mv.startCol;
-			this.endingCol = mv.endingCol;
-		}
+	}
+
+	public void set(ScoredBreakthroughMove mv) {
+		this.startRow = mv.startRow;
+		this.endingRow = mv.endingRow;
+		this.startCol = mv.startCol;
+		this.endingCol = mv.endingCol;
 	}
 }
