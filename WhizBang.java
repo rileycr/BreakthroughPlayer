@@ -1,7 +1,6 @@
 package WhizBang;
 
 import java.util.*;
-
 import breakthrough.*;
 import game.*;
 
@@ -12,12 +11,11 @@ import game.*;
  * 
  */
 public class WhizBang extends GamePlayer {
-
 	protected ScoredBreakthroughMove[] moveStack;
 	public static final double MAX_SCORE = Double.MAX_VALUE;
-	public static int MAX_DEPTH = 8; // TODO
-	
-	public Runnable threads;
+	public static int MAX_DEPTH = 11; //Just used to initialize stack
+	public static double totalTime;
+	public static int currentMoveNum;
 	
 	// Board values for the home team
 	private static final int[][] homeValues = { { 5, 15, 15, 5, 15, 15, 5 },
@@ -37,16 +35,36 @@ public class WhizBang extends GamePlayer {
 	@Override
 	public GameMove getMove(GameState state, String lastMv) {
 		
-		if(state.getNumMoves() < 10){
-			MAX_DEPTH = 6;
-		} else if(state.getNumMoves() < 20){
-			MAX_DEPTH = 7;
-		} else {
-			MAX_DEPTH = 8;
-		}
+		currentMoveNum = state.getNumMoves();
 		initializeStack();
 		alphaBeta((BreakthroughState) state, 0, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 		return moveStack[0];
+	}
+	
+	/**
+	 * Changes the depth of the search depending on how much time remains
+	 * 
+	 * @param board
+	 * @param currentDepth
+	 * @return
+	 */
+	public boolean takesTooLong(BreakthroughState board, int currentDepth) {
+		if (currentMoveNum < 15) {
+			return (currentDepth == 5);
+		} else if ((360 - totalTime) > 120) {
+			return currentDepth == 8;
+		} else if ((360 - totalTime) > 5) {
+			return currentDepth == 7;
+		} else {
+			return (currentDepth == 6);
+		}
+	}
+
+	/**
+	 * Overrides GamePlayers method to calculate time elapsed
+	 */
+	public void timeOfLastMove(double secs){
+		totalTime += secs;
 	}
 
 	/**
@@ -73,13 +91,13 @@ public class WhizBang extends GamePlayer {
 	 */
 	public void alphaBeta(BreakthroughState board, int currentDepth,
 			double alpha, double beta) {
-
+		
 		boolean toMaximize = (board.getWho() == GameState.Who.HOME);
 		boolean isTerminal = terminalValue(board, moveStack[currentDepth]);
-
+		
 		if (isTerminal) {
 			return;
-		} else if (currentDepth == MAX_DEPTH - 1) {
+		} else if (takesTooLong(board, currentDepth)) {
 			moveStack[currentDepth].score = evaluate(board);
 		} else {
 			double bestScore = (toMaximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY);
@@ -119,12 +137,10 @@ public class WhizBang extends GamePlayer {
 					}
 				}
 			}
-
 			Collections.shuffle(possibleMoves);
-			
-			
-				doAB(board, possibleMoves, currentDepth, toMaximize, isTerminal, bestMove, nextMove, moveStack, alpha, beta);
-			
+
+			doAB(board, possibleMoves, currentDepth, toMaximize, isTerminal,
+					bestMove, nextMove, moveStack, alpha, beta);
 		}
 	}
 
@@ -297,7 +313,6 @@ public class WhizBang extends GamePlayer {
 				score++;
 			}
 		}
-
 		return score;
 	}
 
@@ -315,7 +330,7 @@ public class WhizBang extends GamePlayer {
 	public double piecesInARow(BreakthroughState board, int row, int col) {
 		double score = 0;
 
-		if (col < BreakthroughState.N - 1 && board.board[row][col] == board.board[row][col + 1]) {
+		if (row!=0 && row!=BreakthroughState.N && col < BreakthroughState.N - 1 && board.board[row][col] == board.board[row][col + 1]) {
 			score++;
 		}
 
@@ -351,22 +366,19 @@ public class WhizBang extends GamePlayer {
 	}
 
 	public static void main(String[] args) {
+		totalTime = 0;
+		
 		GamePlayer player = new WhizBang("The WhizBanger", false);
-
 		player.compete(args);
 
+		/*
 		// Used for testing
-		
-		// for (int i = 2; i < 11; i++) {
-		// MAX_DEPTH = i;
-		// long startTime = System.nanoTime();
-		//
-		/* BreakthroughState st = new BreakthroughState();
-		 player.init();
-		 GameMove mv = player.getMove(st, "");
-		// System.out.println(mv+" Depth "+i+" took: "+((System.nanoTime()-startTime))/1000000000.0);
-		 System.out.println(mv);
-		 */
+		BreakthroughState st = new BreakthroughState();
+		player.init();
+		GameMove mv = player.getMove(st, "");
+
+		System.out.println(mv);
+		*/
 	}
 }
 
