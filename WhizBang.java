@@ -330,7 +330,7 @@ public class WhizBang extends GamePlayer {
 	public double piecesInARow(BreakthroughState board, int row, int col) {
 		double score = 0;
 
-		if (row!=0 && row!=BreakthroughState.N && col < BreakthroughState.N - 1 && board.board[row][col] == board.board[row][col + 1]) {
+		if (col < BreakthroughState.N - 1 && board.board[row][col] == board.board[row][col + 1]) {
 			score++;
 		}
 
